@@ -20,8 +20,8 @@ extern crate log;
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// String to send by writer 
-    #[clap(short, long, value_parser, required = false, default_value = "sample")]
-    string: String,
+    #[clap(short, long, value_parser, required = false, default_value = "1000")]
+    size: u32,
     #[clap(short, long, value_parser)]
     reader_topic: Option<String>,
     #[clap(short, long, value_parser)]
@@ -30,7 +30,7 @@ struct Args {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
-    pub expeditor: String,
+    pub content: String,
     pub id: u64,
 }
 
@@ -54,7 +54,7 @@ fn main() {
         let topic = domain_participant
             .create_topic(
                 topic.to_string(),
-                "Test of TokioDDS".to_string(),
+                "Test of RustDDS".to_string(),
                 &qos,
                 TopicKind::NoKey,
             )
@@ -73,7 +73,7 @@ fn main() {
             while running.load(Ordering::SeqCst) {
                 if let Ok(Some(sample)) = reader.read_next_sample() {
                     let msg = sample.into_value();
-                    println!("read <<< {:?}", msg);
+                    println!("read <<< {:?} #{}", msg.content.len(), msg.id);
                 }
             }
         });
@@ -99,15 +99,19 @@ fn main() {
         //     .unwrap();
 
         let running = running_0.clone();
+        let mut s = String::new();
+        for _ in 0..args.size {
+            s.push('z');
+        }
         thread::spawn(move || {
             let mut msg = Message {
-                expeditor: String::from(args.string.clone()),
+                content: s, 
                 id: 0,
             };
             while running.load(Ordering::SeqCst) {
                 msg.id += 1;
                 writer.write(msg.clone(), None).unwrap();
-                println!("write >>> {:?}", msg);
+                println!("write >>> {:?} #{}", msg.content.len(), msg.id);
                 sleep(Duration::from_secs(1));
             }
         });

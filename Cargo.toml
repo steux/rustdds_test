@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1.0.137", features = ["derive"] }
-rustdds = "0.7.11"
+rustdds = { path = "/home/steux/sandbox/RustDDS" } 
 log = "0.4.0"
 env_logger = "0.9.0"
 clap = { version = "4.0.32", features = ["derive"] }
